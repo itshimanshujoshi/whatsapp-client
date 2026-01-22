@@ -36,9 +36,7 @@ function App() {
     };
   }, [userId, targetUserId]);
 
-  const [messages, setMessages] = useState([
-    { id: 1, text: "Hey! How are you?", sender: "other", time: "10:30 AM" },
-  ]);
+  const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
 
   const handleSendMessage = (e) => {
