@@ -1,7 +1,7 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import io from "socket.io-client";
 
-const serverUrl = "localhost:8080";
+const serverUrl = import.meta.env.VITE_SERVER_URL || "localhost:8080";
 
 function App() {
   const { userId, targetUserId } = useMemo(() => {
@@ -12,27 +12,30 @@ function App() {
     };
   }, []);
 
+  const socketRef = useRef(null);
+
   useEffect(() => {
     const socket = io(serverUrl);
+    socketRef.current = socket;
     socket.emit("joinChat", { userId, targetUserId });
 
-    socket.on("messageReceived", ({text, senderId}) => {
-      console.log("message received functoin: Current user : " + userId + " and sender is : " + senderId);
+    socket.on("messageReceived", ({ text, senderId }) => {
       const newMessage = {
         id: Date.now(),
         text: text,
-        sender: senderId == userId ? 'me' : 'other',
+        sender: senderId == userId ? "me" : "other",
         time: new Date().toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         }),
       };
 
-      setMessages([...messages, newMessage]);
+      setMessages((prev) => [...prev, newMessage]);
     });
 
     return () => {
       socket.disconnect();
+      socketRef.current = null;
     };
   }, [userId, targetUserId]);
 
@@ -53,17 +56,14 @@ function App() {
       }),
     };
 
-    setMessages([...messages, newMessage]);
+    setMessages((prev) => [...prev, newMessage]);
     setInputMessage("");
 
-    const socket = io(serverUrl);
-    socket.emit("sendMessage", {
+    socketRef.current?.emit("sendMessage", {
       userId,
       targetUserId,
       text: inputMessage,
     });
-
-    // TODO: Add your socket.emit() here to send message to server
   };
 
   return (
